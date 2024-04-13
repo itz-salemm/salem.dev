@@ -1,0 +1,28 @@
+name: Deploy to S3 bucket
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup SSH Keys and known_hosts
+        uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add SSH host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+      - name: Deploy to Sabaoth’s server
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "
+            echo '${{ secrets.SSH_PASSPHRASE }}' | ls
+            sudo -S git -C /var/www/sabaoth.it pull https://$PAT@github.com/Sabaoth-ou/Sabaoth-web.git master
+            sudo git config user.name 'Crinmatic'
+            sudo git config user.email 'Oluseunalagbee@gmail.com'
+            pwd
+          "
